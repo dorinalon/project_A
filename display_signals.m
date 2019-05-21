@@ -1,5 +1,6 @@
+close all;
 A=readtable('268269-2326-MDC_PULS_OXIM_PLETH-125.csv');
-x=A{:,1};
+x=A{:,1}; x = x - x(1); % time starts from 0 
 y=A{:,2};
 figure(1);
 %subplot(4,1,1);
@@ -11,18 +12,18 @@ hold all;
 
 
 B=readtable('268269-2326-MDC_PRESS_BLD_ART_ABP-125.csv');
-x=B{:,1};
+x=B{:,1}; x = x - x(1); % time starts from 0 
 y=B{:,2};
 figure(2);
 %subplot(4,1,2);
-%y_new = y.*0.0625-40;
-plot(x,y);
+y_new = y.*0.0625-40;
+plot(x,y_new);
 title('Blood Pressure');
 ylabel('Torr');
 xlabel('time [sec]');
 
 C=readtable('268269-2326-MDC_RESP-62.5.csv');
-x=C{:,1};
+x=C{:,1}; x = x - x(1); % time starts from 0 
 y=C{:,2};
 figure(3);
 %subplot(4,1,3);
@@ -31,7 +32,7 @@ title('Respiratory Impedance');
 xlabel('time [sec]');
 
 D=readtable('911-7931-MDC_ECG_ELEC_POTL_II-500.csv');
-x=D{:,1};
+x=D{:,1}; x = x - x(1); % time starts from 0 
 y=D{:,2};
 figure(4);
 %subplot(4,1,4);
