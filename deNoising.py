@@ -9,7 +9,7 @@ from torch.autograd import Variable
 #matplotlib inline
 np.random.seed(0)
 
-# Generating a clean sine wave
+# Generating a clean sine wave (actually the freq is 1/60)
 def sine(X, signal_freq=60.):
     return np.sin(2 * np.pi * (X) / signal_freq)
 
@@ -90,7 +90,7 @@ for t in range(301):
     if t%20==0:
         print(t, running_loss)
 
-t_inp = Variable(torch.Tensor(test_inp.reshape((test_inp.shape[0], -1, 1))), requires_grad=True)
+t_inp = Variable(torch.Tensor(test_inp.reshape((test_inp.shape[0], -1, 1))), requires_grad=False)
 pred_t = r(t_inp)
 
 # Test loss
@@ -104,4 +104,5 @@ plt.plot(pred_t[sample_num].data.numpy(), label='Pred')
 plt.plot(test_out[sample_num], label='GT')
 plt.legend()
 plt.title("Sample num: {}".format(sample_num))
+plt.show()
 
