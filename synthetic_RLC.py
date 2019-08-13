@@ -101,7 +101,7 @@ for t in range(301):
 
     out = Variable(torch.Tensor(train_QC.reshape((train_QC.shape[0], -1, 1))) )
 
-    pred = r(inp_VR,inp_VS,inp_IL)#concat?
+    pred = r(torch.cat(inp_VR,inp_VS,inp_IL),0)#concat?
 
     optimizer.zero_grad()
     predictions.append(pred.data.numpy())
@@ -120,7 +120,7 @@ t_inp_VR = Variable(torch.Tensor(test_VR.reshape((test_VR.shape[0], -1, 1))), re
 t_inp_VS = Variable(torch.Tensor(test_VS.reshape((test_VS.shape[0], -1, 1))), requires_grad=False)
 t_inp_IL = Variable(torch.Tensor(test_IL.reshape((test_IL.shape[0], -1, 1))), requires_grad=False)
 
-pred_t = r(t_inp_VR,t_inp_VS,t_inp_IL)
+pred_t = r(torch.cat(t_inp_VR,t_inp_VS,t_inp_IL),0)
 
 # Test loss
 runningLossTest = 0.0
