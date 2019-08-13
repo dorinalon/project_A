@@ -33,37 +33,37 @@ plt.show()
 
 
 def create_dataset(n_samples=10000, sample_size=100):
-    data_VR = np.zeros((n_samples, sample_size))
-    data_IL = np.zeros((n_samples, sample_size))
-    data_VS = np.zeros((n_samples, sample_size))
+    data_VR = np.zeros((sample_size, n_samples))
+    data_IL = np.zeros((sample_size, n_samples))
+    data_VS = np.zeros((sample_size, n_samples))
 
 
     for i in range(n_samples):
         sample_VR = sample(sample_size)
-        data_VR[i, :] = sample_VR
+        data_VR[:, i] = sample_VR
         sample_VS = sample(sample_size)
-        data_VS[i, :] = sample_VS
+        data_VS[:, i] = sample_VS
         sample_IL = sample(sample_size)
-        data_IL[i, :] = sample_IL
+        data_IL[:, i] = sample_IL
     return data_VR, data_VS, data_IL
 
 data_VR, data_VS, data_IL = create_dataset()
-train_VR,train_VS, train_IL = data_VR[:8000], data_VS[:8000], data_IL[:8000]
-test_VR, test_VS, test_IL = data_VR[8000:], data_VS[8000:], data_IL[8000:]
+train_VR,train_VS, train_IL = data_VR[:,:8000], data_VS[:,:8000], data_IL[:,:8000]
+test_VR, test_VS, test_IL = data_VR[:,8000:], data_VS[:,8000:], data_IL[:,8000:]
 
 
 C = 1
 L = 1
 sub_VS_VR = np.subtract(data_VS, data_VR)
 #der_IL = (np.gradient(data_IL[0],2))*L
-mul_IL = np.zeros((10000, 100))
+mul_IL = np.zeros((100, 10000))
 for i in range(10000):
-    mul_IL[i, :] = (data_IL[i] * data_IL[i])*L
+    mul_IL[:, i] = (data_IL[:,i] * data_IL[:,i])*L
 
 data_QC = (np.subtract(sub_VS_VR, mul_IL))*C
 
-train_QC = data_QC[:8000]
-test_QC = data_QC[8000:]
+train_QC = data_QC[:,:8000]
+test_QC = data_QC[:,8000:]
 
 input_dim = 3
 output_dim = 1
@@ -74,15 +74,21 @@ class CustomLSTM(nn.Module):
     def __init__(self, hidden_size, input_size, output_size):
         super(CustomLSTM, self).__init__()
         self.hidden_dim = hidden_size
-        self.lstm = nn.LSTM(input_size, output_size)
+        self.output_size = output_size
+        self.lstm = nn.LSTM(input_size=input_size, hidden_size=hidden_size)
         self.act = nn.Tanh()
-        self.linear = nn.Linear(hidden_size, output_size, )
+        self.linear = nn.Linear(in_features=hidden_size, out_features=output_size )
 
 
     def forward(self, x):
-        pred, hidden = self.lstm(x, None)
-        pred = self.act(self.linear(pred)).view(pred.data.shape[0], -1, 1)
-        return pred
+        pred, (hidden, context) = self.lstm(x)
+        seqLength = x.size(0)
+        batchSize = x.size(1)
+        out = torch.zeros(seqLength, batchSize, self.output_size)
+        for s in range(seqLength):
+            out[s] = self.act(self.linear(pred[s]))
+
+        return out
 
 r= CustomLSTM( hidden_size, input_dim, output_dim)
 
@@ -93,15 +99,15 @@ optimizer = torch.optim.Adam(r.parameters(), lr=1e-2)
 loss_func = nn.L1Loss()
 
 running_loss = 0.0
-for t in range(301):
+for t in range(5):
     hidden = None
     inp_VR = Variable(torch.Tensor(train_VR.reshape((train_VR.shape[0], -1, 1))), requires_grad=True)
     inp_VS = Variable(torch.Tensor(train_VS.reshape((train_VS.shape[0], -1, 1))), requires_grad=True)
     inp_IL = Variable(torch.Tensor(train_IL.reshape((train_IL.shape[0], -1, 1))), requires_grad=True)
 
     out = Variable(torch.Tensor(train_QC.reshape((train_QC.shape[0], -1, 1))) )
-
-    pred = r(torch.cat(inp_VR,inp_VS,inp_IL),0)#concat?
+    x = torch.cat((inp_VR,inp_VS,inp_IL),dim=2)
+    pred = r(x)
 
     optimizer.zero_grad()
     predictions.append(pred.data.numpy())
