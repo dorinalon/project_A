@@ -6,7 +6,7 @@ import torch.nn as nn
 from torch.autograd import Variable
 #from keras import load_model
 
-
+sample_size = 100
 #matplotlib inline
 np.random.seed(50)
 
@@ -46,18 +46,21 @@ train_VR,train_VS, train_IL = data_VR[:,:8000], data_VS[:,:8000], data_IL[:,:800
 test_VR, test_VS, test_IL = data_VR[:,8000:], data_VS[:,8000:], data_IL[:,8000:]
 
 
-C = 0.6
-L = 0.1
+C = 3
+L=1
 
 # Creating the output dataset according to a formula
 sub_VS_VR = np.subtract(data_VS, data_VR)
-mul_IL = np.zeros((100, 10000))
+mul_IL = np.zeros((sample_size, 10000))
+data_QC =  np.zeros((sample_size, 10000))
 for i in range(10000):
     L_rand = random.randint(1, 100)
     L_rand = L_rand/100
-    mul_IL[:, i] = (data_IL[:,i] * data_IL[:,i])*L_rand
+    mul_IL[:, i] = (data_IL[:,i] * data_IL[:,i])*L
 
-data_QC = (np.subtract(sub_VS_VR,( mul_IL)))*C
+#for i in range(2,100):
+ #   data_QC[i,:] = (np.subtract(sub_VS_VR[i-2,:],( mul_IL[i-1,:])))*C
+data_QC = (np.subtract(sub_VS_VR,mul_IL))*C
 
 # Dividing the output dataset into train and test
 train_QC = data_QC[:,:8000]
@@ -66,8 +69,8 @@ test_QC = data_QC[:,8000:]
 # Define the nn dimensions
 input_dim = 3
 output_dim = 1
-hidden_size = 30
-num_layers = 1
+hidden_size = 40
+num_layers = 3
 
 # Creating lstm class
 class CustomLSTM(nn.Module):
@@ -76,7 +79,7 @@ class CustomLSTM(nn.Module):
         super(CustomLSTM, self).__init__()
         self.hidden_dim = hidden_size
         self.output_size = output_size
-        self.lstm = nn.LSTM(input_size=input_size, hidden_size=hidden_size)
+        self.lstm = nn.LSTM(input_size=input_size, hidden_size=hidden_size, num_layers=num_layers)
         self.act = nn.Tanh()
         self.linear = nn.Linear(in_features=hidden_size, out_features=output_size )
 
@@ -87,7 +90,8 @@ class CustomLSTM(nn.Module):
         batchSize = x.size(1)
         out = torch.zeros(seqLength, batchSize, self.output_size)
         for s in range(seqLength):
-            out[s] = self.act(self.linear(pred[s]))
+            out[s] = self.linear(pred[s])
+            # out[s] = self.act(self.linear(pred[s]))
 
         return out
 
@@ -98,9 +102,11 @@ predictions = []
 optimizer = torch.optim.Adam(r.parameters(), lr=1e-2)
 loss_func = nn.L1Loss()
 
+tau = 20 # future estimation time
+loss_vec = []
 running_loss = 0.0
 # TRAIN
-for t in range(101):
+for t in range(200):
     hidden = None
     inp_VR = Variable(torch.Tensor(train_VR.reshape((train_VR.shape[0], -1, 1))), requires_grad=True)
     inp_VS = Variable(torch.Tensor(train_VS.reshape((train_VS.shape[0], -1, 1))), requires_grad=True)
@@ -108,10 +114,15 @@ for t in range(101):
 
     out = Variable(torch.Tensor(train_QC.reshape((train_QC.shape[0], -1, 1))) )
     x = torch.cat((inp_VR,inp_VS,inp_IL),dim=2)
+
+    x = x[:-tau]
+    out = out[tau:]
+
     pred = r(x)
     optimizer.zero_grad()
     predictions.append(pred.data.numpy())
     loss = loss_func(pred, out)
+
     loss.backward()
     optimizer.step()
     # print statistics
@@ -119,11 +130,19 @@ for t in range(101):
     running_loss += loss.item()
     if t%20==0:
         print(t, running_loss)
-        plt.plot(pred[:,100].data.numpy(), label='pred[0]')
-        plt.plot(out[:, 100].data.numpy(), label='out[0]')
+        plt.plot(pred[:,100].data.numpy(), label='pred[100]')
+        plt.plot(out[:, 100].data.numpy(), label='out[100]')
         plt.title(t)
         plt.legend()
         plt.show()
+
+    loss_vec.append(running_loss)
+
+plt.plot(loss_vec)
+plt.title("Mean loss")
+plt.xlabel('iteration')
+plt.ylabel('loss')
+plt.show()
 
 # TEST
 t_inp_VR = Variable(torch.Tensor(test_VR.reshape((test_VR.shape[0], -1, 1))), requires_grad=False)
@@ -135,12 +154,26 @@ pred_t = r(x_t)
 
 # Test loss
 runningLossTest = 0.0
-lossTest = loss_func(pred_t, Variable(torch.Tensor(test_QC.reshape((test_QC.shape[0], -1, 1)))))#concat?
+lossTest = loss_func(pred_t, Variable(torch.Tensor(test_QC.reshape((test_QC.shape[0], -1, 1)))))
 runningLossTest += lossTest.item()
-plt.plot(pred_t[:,1000].data.numpy(), label ='pred_t[0]')
-plt.plot(test_QC[:,1000], label ='TEST_QC[0]')
 
+# plot the mean error for each iteration
+plt.plot(pred_t[:,100].data.numpy(), label ='pred_t[100]')
+plt.plot(test_QC[tau:,100], label ='TEST_QC[100]')
+plt.xlabel('t [sec]')
 plt.legend()
+plt.show()
+
+# plot the error of a single example
+samp_loss_vec = []
+for i in range(80):
+    a = pred_t[i, 100].data.numpy()
+    b = test_QC[i+tau, 100]
+    samp_loss_vec.append(abs(np.subtract(a[0],b)))
+plt.plot(samp_loss_vec)
+plt.title("Error = pred_t[100] - test_Qc[100]")
+plt.ylim(0, 10)
+plt.xlabel('t [sec]')
 plt.show()
 
 print("runningLossTest" + str(runningLossTest))
