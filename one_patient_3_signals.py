@@ -77,16 +77,16 @@ train_ri = data_ri[:5000,:]
 train_ppg = data_ppg[:5000,:]
 
 
-test_bp = data_bp[5000:6000,:]
-test_ecg = data_ecg[5000:6000,:]
-test_ri = data_ri[5000:6000,:]
-test_ppg = data_ppg[5000:6000,:]
+test_bp = data_bp[117000:120000,:]
+test_ecg = data_ecg[117000:120000,:]
+test_ri = data_ri[117000:120000,:]
+test_ppg = data_ppg[117000:120000,:]
 
 output_dim = 1
 
 input_dim = 3
 #input_dim = 1
-hidden_size = 20
+hidden_size = 30
 num_layers = 1
 
 # Creating lstm class
@@ -139,19 +139,19 @@ out = Variable(torch.Tensor(train_bp.reshape((train_bp.shape[0], -1, 1))))
 max_ppg = torch.max(inp_ppg).item()
 min_ppg = torch.min(inp_ppg).item()
 
-inp_ppg = inp_ppg[:5000,0:1,0:1] - 0.6 #(max_ppg-min_ppg)/2)
-
+inp_ppg = inp_ppg[:5000,0:1,0:1] - 0.605 #(max_ppg-min_ppg)/2)
+#inp_ppg = inp_ppg[:5000,0:1,0:1] - ((max_ppg-min_ppg)/2) + min_ppg
 max_ecg = torch.max(inp_ecg).item()
 min_ecg = torch.min(inp_ecg).item()
 inp_ecg = inp_ecg[:5000,0:1,0:1] - 1.05 #((max_ecg-min_ecg)/2)
 
 max_ri = torch.max(inp_ri).item()
 min_ri = torch.min(inp_ri).item()
-inp_ri = inp_ri[:5000,0:1,0:1] - 0.65 #((max_ri-min_ri)/2)
+inp_ri = inp_ri[:5000,0:1,0:1] - 0.62 #((max_ri-min_ri)/2)
 
 max_bp = torch.max(out).item()
 min_bp = torch.min(out).item()
-out = out[:5000,0:1,0:1] - 0.95 #((max_bp-min_bp)/2)
+out = out[:5000,0:1,0:1] - 0.93 #((max_bp-min_bp)/2)
 
 #print(min_ppg)
 #inp_ppg = inp_ppg[:1000,0:1,0:1] - 0.8
@@ -197,6 +197,7 @@ for t in range(500):
         plt.legend()
        # plt.subplot(2,1,2)
        # plt.plot(loss_vec)
+        plt.grid()
         plt.show()
 
 
@@ -213,8 +214,20 @@ t_inp_ecg = Variable(torch.Tensor(test_ecg.reshape((test_ecg.shape[0], -1, 1))),
 t_inp_ri = Variable(torch.Tensor(test_ri.reshape((test_ri.shape[0], -1, 1))), requires_grad=False)
 t_inp_ppg = Variable(torch.Tensor(test_ppg.reshape((test_ppg.shape[0], -1, 1))), requires_grad=False)
 
-x_t = torch.cat((t_inp_ecg,t_inp_ri,t_inp_ppg), dim=2)
 
+
+
+t_inp_ppg = t_inp_ppg[:,0:1,0:1] - 0.605 #(max_ppg-min_ppg)/2)
+#inp_ppg = inp_ppg[:5000,0:1,0:1] - ((max_ppg-min_ppg)/2) + min_ppg
+
+t_inp_ecg = t_inp_ecg[:,0:1,0:1] - 1.05 #((max_ecg-min_ecg)/2)
+
+
+t_inp_ri = t_inp_ri[:,0:1,0:1] - 0.62 #((max_ri-min_ri)/2)
+
+test_bp = test_bp[:,0] - 0.93 #((max_bp-min_bp)/2)
+
+x_t = torch.cat((t_inp_ecg,t_inp_ri,t_inp_ppg), dim=2)
 pred_t = r(x_t)
 #t_inp_ppg = t_inp_ppg - 0.8
 #test_bp = test_bp - 0.9
@@ -225,10 +238,20 @@ lossTest = loss_func(pred_t, Variable(torch.Tensor(test_bp.reshape((test_bp.shap
 runningLossTest += lossTest.item()
 
 # plot the mean error for each iteration
-plt.plot(t_inp_ppg[:,1].data.numpy(), label ='test_ppg')
+#plt.plot(t_inp_ppg[:,1].data.numpy(), label ='test_ppg')
 plt.title("patient num - 2422441-6012")
-#plt.plot(pred_t[:,1].data.numpy(), label ='pred_t')
-plt.plot(test_bp[tau:,1], label ='TEST_BP')
+plt.plot(pred_t[:,0].data.numpy(), label ='pred_t')
+plt.legend()
+plt.show()
+plt.plot(test_bp, label ='TEST_BP')
+plt.xlabel('t [sec]')
+plt.legend()
+plt.show()
+
+# try to return to normal BP
+plt.title("patient num - 2422441-6012 Real values")
+plt.plot((pred_t[:,0].data.numpy())*2000, label ='pred_t')
+plt.plot(test_bp*2000, label ='TEST_BP')
 plt.xlabel('t [sec]')
 plt.legend()
 plt.show()
@@ -236,8 +259,8 @@ plt.show()
 # plot the error of a single example
 samp_loss_vec = []
 for i in range(80):
-    a = pred_t[i,1].data.numpy()
-    b = test_bp[i,1]
+    a = pred_t[:,0].data.numpy()
+    b = test_bp
     samp_loss_vec.append(abs(np.subtract(a[0],b)))
 plt.plot(samp_loss_vec)
 plt.title("Error = pred_t - test_BP")
