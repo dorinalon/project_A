@@ -6,9 +6,9 @@ Written by: Gil Caspi <gilcaspi@campus.technion.ac.il>
     * File -> Setting -> Project -> Project Interpreter:
         ![](docs/images/Pycharm_setting.png)
     * Click the Setting icon:
-        ![](docs/images/Pycharm_setting_click.png)
+        ![](docs/images/pycharm_setting_click.png)
     * Chose Add (to add a new project interpreter):
-        ![](docs/images/Pycharm_setting_add.png)
+        ![](docs/images/pycharm_setting_add.png)
     * Create a new Python Virtualenv:
         Choose Python 3.5 interpreter (create in venv folder inside the project)
         ![](docs/images/pycharm_add_interpreter.png)
