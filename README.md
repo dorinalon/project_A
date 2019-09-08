@@ -26,7 +26,7 @@ Written by: Gil Caspi <gilcaspi@campus.technion.ac.il>
    with private repositories for free) - already done.
 2. Open a Project in Github through browser - already done.
 3. In Pycharm click VCS:
-    ![](docs/images/pycharm_vcs.png)
+    ![](docs/images/pycharm_vcs_click.png)
 4. Git Remotes:
     ![](docs/images/pycharm_git_remotes.png)
 5. Add new Git Remote:
