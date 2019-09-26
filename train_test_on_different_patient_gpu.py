@@ -113,17 +113,19 @@ def Train_and_Test(path_bp, path_ppg , patient_num,test1_bp_path,test1_ppg_path,
 
     # data normalization
 
+    max_bp_div = np.amax(data_bp)
+    max_ppg_div = np.amax(data_ppg)
+
+    data_bp = data_bp/max_bp_div
+    data_ppg = data_ppg/max_ppg_div
+
     max_bp = np.amax(data_bp)
     max_ppg = np.amax(data_ppg)
+    min_bp = np.amin(data_bp)
+    min_ppg = np.amin(data_ppg)
 
-    data_bp = data_bp/max_bp
-    data_ppg = data_ppg/max_ppg
-
-    median_bp = stat.median(data_bp[1])
-    median_ppg = stat.median(data_ppg[1])
-
-    data_bp = data_bp - median_bp
-    data_ppg = data_ppg - median_ppg
+    data_bp = data_bp - ((max_bp - min_bp)/2 + min_bp)
+    data_ppg = data_ppg - ((max_ppg - min_ppg)/2 + min_ppg)
 
     ##test normalization
     max_bp_test1 = np.amax(data_bp_test_1)
@@ -132,11 +134,13 @@ def Train_and_Test(path_bp, path_ppg , patient_num,test1_bp_path,test1_ppg_path,
     data_bp_test_1 = data_bp_test_1/max_bp_test1
     data_ppg_test_1 = data_ppg_test_1/max_ppg_test1
 
-    median_bp_test1 = stat.median(data_bp_test_1[1])
-    median_ppg_test1 = stat.median(data_ppg_test_1[1])
+    max_bp_test1 = np.amax(data_bp_test_1)
+    max_ppg_test1 = np.amax(data_ppg_test_1)
+    min_bp_test1 = np.amin(data_bp_test_1)
+    min_ppg_test1 = np.amin(data_ppg_test_1)
 
-    data_bp_test_1 = data_bp_test_1 - median_bp_test1
-    data_ppg_test_1 = data_ppg_test_1 - median_ppg_test1
+    data_bp_test_1 = data_bp_test_1 - ((max_bp_test1 - min_bp_test1) / 2 + min_bp_test1)
+    data_ppg_test_1 = data_ppg_test_1 - ((max_ppg_test1 - min_ppg_test1) / 2 + min_ppg_test1)
     ##
     max_bp_test2 = np.amax(data_bp_test_2)
     max_ppg_test2 = np.amax(data_ppg_test_2)
@@ -144,11 +148,13 @@ def Train_and_Test(path_bp, path_ppg , patient_num,test1_bp_path,test1_ppg_path,
     data_bp_test_2 = data_bp_test_2/max_bp_test2
     data_ppg_test_2 = data_ppg_test_2/max_ppg_test2
 
-    median_bp_test2 = stat.median(data_bp_test_2[1])
-    median_ppg_test2 = stat.median(data_ppg_test_2[1])
+    max_bp_test2 = np.amax(data_bp_test_2)
+    max_ppg_test2 = np.amax(data_ppg_test_2)
+    min_bp_test2 = np.amin(data_bp_test_2)
+    min_ppg_test2 = np.amin(data_ppg_test_2)
 
-    data_bp_test_2 = data_bp_test_2 - median_bp_test2
-    data_ppg_test_2 = data_ppg_test_2 - median_ppg_test2
+    data_bp_test_2 = data_bp_test_2 - ((max_bp_test2 - min_bp_test2) / 2 + min_bp_test2)
+    data_ppg_test_2 = data_ppg_test_2 - ((max_ppg_test2 - min_ppg_test2) / 2 + min_ppg_test2)
 
     # division to train and test
     train_size_125Hz =  round(row_count * (3 / 4))
@@ -210,7 +216,7 @@ def Train_and_Test(path_bp, path_ppg , patient_num,test1_bp_path,test1_ppg_path,
     out = torch.Tensor(train_bp.reshape((train_bp.shape[0], -1, 1))).cuda()
 
     #os.mkdir(only_PPG_path + patient_num )
-    for t in range(400):
+    for t in range(401):
         hidden = None
         pred = r(inp_ppg)
         optimizer.zero_grad()
@@ -275,8 +281,8 @@ def Train_and_Test(path_bp, path_ppg , patient_num,test1_bp_path,test1_ppg_path,
     # plot the mean error for each iteration
     for j in range(test_size_125Hz):
         a = pred_t[j,1].data.cpu().numpy()
-        pred_t[j,1] = (((a[0] + median_bp) * max_bp) * 0.0625) - 40
-    test_bp[:,1] = ((((test_bp[:,1]) + median_bp ) * max_bp) * 0.0625) - 40
+        pred_t[j,1] = (((a[0] + ((max_bp-min_bp)/2)+min_bp) * max_bp_div) * 0.0625) - 40
+    test_bp[:,1] = (((test_bp[:,1] + ((max_bp-min_bp)/2)+min_bp ) * max_bp_div) * 0.0625) - 40
     plt.clf()
     plt.plot(pred_t[:1000,1].data.cpu().numpy(), label ='prediction_BP')
     plt.plot(test_bp[:1000,1], label ='expected_BP')
@@ -284,7 +290,7 @@ def Train_and_Test(path_bp, path_ppg , patient_num,test1_bp_path,test1_ppg_path,
     plt.ylabel('mmHg')
     plt.title("2728529-6534 - BP Prediction based on PPG")
     plt.legend()
-    plt.savefig(only_PPG_path + patient_num + '/MeanError')
+    plt.savefig(only_PPG_path + patient_num + '/Prediction and Expected BP')
 
 
     path = only_PPG_path + patient_num + '/expec0_pred1.csv'
@@ -326,6 +332,14 @@ def Train_and_Test(path_bp, path_ppg , patient_num,test1_bp_path,test1_ppg_path,
     plt.xlabel('t [sec]')
     plt.savefig(only_PPG_path + patient_num + '/Error')
 
+Train_and_Test('/home/shirili/Downloads/ShirirliDorin/project_A/data/2642420-8140-MDC_PRESS_BLD_ART_ABP-125.csv',
+               '/home/shirili/Downloads/ShirirliDorin/project_A/data/2642420-8140-MDC_PULS_OXIM_PLETH-125.csv',
+                '2642420-8140',
+                '/home/shirili/Downloads/ShirirliDorin/project_A/data/2677398-3036-MDC_PRESS_BLD_ART_ABP-125.csv',
+               '/home/shirili/Downloads/ShirirliDorin/project_A/data/2677398-3036-MDC_PULS_OXIM_PLETH-125.csv',
+                '/home/shirili/Downloads/ShirirliDorin/project_A/data/268269-2325-MDC_PRESS_BLD_ART_ABP-125.csv',
+               '/home/shirili/Downloads/ShirirliDorin/project_A/data/268269-2325-MDC_PULS_OXIM_PLETH-125.csv'
+               )
 
 Train_and_Test('/home/shirili/Downloads/ShirirliDorin/project_A/data/268269-2325-MDC_PRESS_BLD_ART_ABP-125.csv',
                '/home/shirili/Downloads/ShirirliDorin/project_A/data/268269-2325-MDC_PULS_OXIM_PLETH-125.csv',
@@ -354,11 +368,3 @@ Train_and_Test('/home/shirili/Downloads/ShirirliDorin/project_A/data/2663300-511
                '/home/shirili/Downloads/ShirirliDorin/project_A/data/2642420-8140-MDC_PULS_OXIM_PLETH-125.csv'
                )
 
-Train_and_Test('/home/shirili/Downloads/ShirirliDorin/project_A/data/2642420-8140-MDC_PRESS_BLD_ART_ABP-125.csv',
-               '/home/shirili/Downloads/ShirirliDorin/project_A/data/2642420-8140-MDC_PULS_OXIM_PLETH-125.csv',
-                '2642420-8140',
-                '/home/shirili/Downloads/ShirirliDorin/project_A/data/2677398-3036-MDC_PRESS_BLD_ART_ABP-125.csv',
-               '/home/shirili/Downloads/ShirirliDorin/project_A/data/2677398-3036-MDC_PULS_OXIM_PLETH-125.csv',
-                '/home/shirili/Downloads/ShirirliDorin/project_A/data/268269-2325-MDC_PRESS_BLD_ART_ABP-125.csv',
-               '/home/shirili/Downloads/ShirirliDorin/project_A/data/268269-2325-MDC_PULS_OXIM_PLETH-125.csv'
-               )
