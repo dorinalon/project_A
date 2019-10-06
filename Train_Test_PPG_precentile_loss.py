@@ -41,7 +41,9 @@ def calc_loss_precentage(expec_BP, pred_BP, time_length, iteration_num, patient_
     expec_5 = []
     pred_95 = []
     pred_5 = []
-    for i in range(int(time_length/interval_30_sec)):
+
+    for i in range(int(time_length/interval_30_sec) ):
+
         expec_95.append(np.percentile(expec_BP[i * interval_30_sec:(i + 1) * interval_30_sec], 95))
         expec_5.append(np.percentile(expec_BP[i * interval_30_sec:(i + 1) * interval_30_sec], 5))
         pred_95.append(np.percentile(pred_BP[i * interval_30_sec:(i + 1) * interval_30_sec], 95))
@@ -324,47 +326,47 @@ def Train_and_Test_4signals(path_bp, path_ppg, patient_num, train_start_time):
     # plt.xlabel('t [sec]')
     # plt.savefig(only_PPG_path + patient_num + '/Error')
 
+#
+# Train_and_Test_4signals('/home/shirili/Downloads/ShirirliDorin/project_A/data_4_sig/2210563-9215/2210563-9215_BP_125Hz.csv',
+#                         '/home/shirili/Downloads/ShirirliDorin/project_A/data_4_sig/2210563-9215/2210563-9215_PPG_125Hz.csv',
+#                         '2210563-9215',0)
+#
+# Train_and_Test_4signals('/home/shirili/Downloads/ShirirliDorin/project_A/data_4_sig/2210563-9215/2210563-9215_BP_125Hz.csv',
+#                         '/home/shirili/Downloads/ShirirliDorin/project_A/data_4_sig/2210563-9215/2210563-9215_PPG_125Hz.csv',
+#                         '2210563-9215',15)
+#
+# Train_and_Test_4signals('/home/shirili/Downloads/ShirirliDorin/project_A/data_4_sig/268269-2325/268269-2325-MDC_PRESS_BLD_ART_ABP-125.csv',
+#                         '/home/shirili/Downloads/ShirirliDorin/project_A/data_4_sig/268269-2325/268269-2325-MDC_PULS_OXIM_PLETH-125.csv',
+#                         '268269-2325',0)
+#
+# Train_and_Test_4signals('/home/shirili/Downloads/ShirirliDorin/project_A/data_4_sig/268269-2325/268269-2325-MDC_PRESS_BLD_ART_ABP-125.csv',
+#                         '/home/shirili/Downloads/ShirirliDorin/project_A/data_4_sig/268269-2325/268269-2325-MDC_PULS_OXIM_PLETH-125.csv',
+#                         '268269-2325',15)
+#
+#
+# Train_and_Test_4signals('/home/shirili/Downloads/ShirirliDorin/project_A/data_4_sig/2642420-8086/2642420-8086_BP_125Hz.csv',
+#                         '/home/shirili/Downloads/ShirirliDorin/project_A/data_4_sig/2642420-8086/2642420-8086_PPG_125Hz.csv',
+#                         '2642420-8086',0)
+#
+# Train_and_Test_4signals('/home/shirili/Downloads/ShirirliDorin/project_A/data_4_sig/2642420-8086/2642420-8086_BP_125Hz.csv',
+#                         '/home/shirili/Downloads/ShirirliDorin/project_A/data_4_sig/2642420-8086/2642420-8086_PPG_125Hz.csv',
+#                         '2642420-8086',15)
+#
+#
+#
+#
+# Train_and_Test_4signals('/home/shirili/Downloads/ShirirliDorin/project_A/data_4_sig/2728529-6534/2728529-6534_BP_125Hz.csv',
+#                         '/home/shirili/Downloads/ShirirliDorin/project_A/data_4_sig/2728529-6534/2728529-6534_PPG_125Hz.csv',
+#                         '2728529-6534',0)
 
-Train_and_Test_4signals('/home/shirili/Downloads/ShirirliDorin/project_A/data_4_sig/2210563-9215/2210563-9215_BP_125Hz.csv',
-                        '/home/shirili/Downloads/ShirirliDorin/project_A/data_4_sig/2210563-9215/2210563-9215_PPG_125Hz.csv',
-                        '2210563-9215',0)
-
-Train_and_Test_4signals('/home/shirili/Downloads/ShirirliDorin/project_A/data_4_sig/2210563-9215/2210563-9215_BP_125Hz.csv',
-                        '/home/shirili/Downloads/ShirirliDorin/project_A/data_4_sig/2210563-9215/2210563-9215_PPG_125Hz.csv',
-                        '2210563-9215',15)
-
-Train_and_Test_4signals('/home/shirili/Downloads/ShirirliDorin/project_A/data_4_sig/268269-2325/268269-2325-MDC_PRESS_BLD_ART_ABP-125.csv',
-                        '/home/shirili/Downloads/ShirirliDorin/project_A/data_4_sig/268269-2325/268269-2325-MDC_PULS_OXIM_PLETH-125.csv',
-                        '268269-2325',0)
-
-Train_and_Test_4signals('/home/shirili/Downloads/ShirirliDorin/project_A/data_4_sig/268269-2325/268269-2325-MDC_PRESS_BLD_ART_ABP-125.csv',
-                        '/home/shirili/Downloads/ShirirliDorin/project_A/data_4_sig/268269-2325/268269-2325-MDC_PULS_OXIM_PLETH-125.csv',
-                        '268269-2325',15)
-
-
-Train_and_Test_4signals('/home/shirili/Downloads/ShirirliDorin/project_A/data_4_sig/2642420-8086/2642420-8086_BP_125Hz.csv',
-                        '/home/shirili/Downloads/ShirirliDorin/project_A/data_4_sig/2642420-8086/2642420-8086_PPG_125Hz.csv',
-                        '2642420-8086',0)
-
-Train_and_Test_4signals('/home/shirili/Downloads/ShirirliDorin/project_A/data_4_sig/2642420-8086/2642420-8086_BP_125Hz.csv',
-                        '/home/shirili/Downloads/ShirirliDorin/project_A/data_4_sig/2642420-8086/2642420-8086_PPG_125Hz.csv',
-                        '2642420-8086',15)
-
-
-
-
-Train_and_Test_4signals('/home/shirili/Downloads/ShirirliDorin/project_A/data_4_sig/2728529-6534/2728529-6534_BP_125Hz.csv',
-                        '/home/shirili/Downloads/ShirirliDorin/project_A/data_4_sig/2728529-6534/2728529-6534_PPG_125Hz.csv',
-                        '2728529-6534',0)
-
-Train_and_Test_4signals('/home/shirili/Downloads/ShirirliDorin/project_A/data_4_sig/2728529-6534/2728529-6534_BP_125Hz.csv',
-                        '/home/shirili/Downloads/ShirirliDorin/project_A/data_4_sig/2728529-6534/2728529-6534_PPG_125Hz.csv',
-                        '2728529-6534',15)
-
-Train_and_Test_4signals('/home/shirili/Downloads/ShirirliDorin/project_A/data_4_sig/2544444-5692/2544444-5692_BP_125Hz.csv',
-                        '/home/shirili/Downloads/ShirirliDorin/project_A/data_4_sig/2544444-5692/2544444-5692_PPG_125Hz.csv',
-                       '2544444-5692',0
-                        )
+# Train_and_Test_4signals('/home/shirili/Downloads/ShirirliDorin/project_A/data_4_sig/2728529-6534/2728529-6534_BP_125Hz.csv',
+#                         '/home/shirili/Downloads/ShirirliDorin/project_A/data_4_sig/2728529-6534/2728529-6534_PPG_125Hz.csv',
+#                         '2728529-6534',10)
+#
+# Train_and_Test_4signals('/home/shirili/Downloads/ShirirliDorin/project_A/data_4_sig/2544444-5692/2544444-5692_BP_125Hz.csv',
+#                         '/home/shirili/Downloads/ShirirliDorin/project_A/data_4_sig/2544444-5692/2544444-5692_PPG_125Hz.csv',
+#                        '2544444-5692',0
+#                         )
 
 Train_and_Test_4signals('/home/shirili/Downloads/ShirirliDorin/project_A/data_4_sig/2544444-5692/2544444-5692_BP_125Hz.csv',
                         '/home/shirili/Downloads/ShirirliDorin/project_A/data_4_sig/2544444-5692/2544444-5692_PPG_125Hz.csv',
