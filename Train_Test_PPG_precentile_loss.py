@@ -16,7 +16,7 @@ input_dim = 1
 hidden_size = 30
 num_layers = 4
 
-only_PPG_path = '/home/shirili/Downloads/ShirirliDorin/project_A/data_125Hz/2728529-6534/outcomes_RI_4LSTM_12-17min'
+only_PPG_path = '/home/shirili/Downloads/ShirirliDorin/project_A/data_125Hz/2728529-6534/new'
 
 def read_csv(path):
     i = 0
@@ -184,7 +184,7 @@ def Train_and_Test_4signals(path_bp, path_ppg, path_ecg, path_ri, patient_num, t
     running_loss = 0.0
 
     # TRAIN
-    inp_ri = torch.Tensor(train_ri_scaled.reshape((train_ri_scaled.shape[0], -1, 1))).cuda()
+    #inp_ri = torch.Tensor(train_ri_scaled.reshape((train_ri_scaled.shape[0], -1, 1))).cuda()
     inp_ppg = torch.Tensor(train_ppg_scaled.reshape((train_ppg_scaled.shape[0], -1, 1))).cuda()
     inp_ecg = torch.Tensor(train_ecg_scaled.reshape((train_ecg_scaled.shape[0], -1, 1))).cuda()
     out = torch.Tensor(train_bp_scaled.reshape((train_bp_scaled.shape[0], -1, 1))).cuda()
@@ -192,15 +192,15 @@ def Train_and_Test_4signals(path_bp, path_ppg, path_ecg, path_ri, patient_num, t
     # TEST
 
     x_test_PPG = torch.Tensor(test_ppg_scaled.reshape((test_ppg_scaled.shape[0], -1, 1))).cuda()
-    x_test_ri = torch.Tensor(test_ri_scaled.reshape((test_ri_scaled.shape[0], -1, 1))).cuda()
+    #x_test_ri = torch.Tensor(test_ri_scaled.reshape((test_ri_scaled.shape[0], -1, 1))).cuda()
     x_test_ecg = torch.Tensor(test_ecg_scaled.reshape((test_ecg_scaled.shape[0], -1, 1))).cuda()
 
-    pred_t = r(x_test_ri)
+    pred_t = r(x_test_PPG)
 
-    for t in range(301):
+    for t in range(1):
         hidden = None
         #x = torch.cat((inp_ppg, inp_ecg, inp_ri), dim=2)
-        pred = r(inp_ri)
+        pred = r(inp_ppg)
         optimizer.zero_grad()
         predictions.append(pred.data.cpu().numpy())
         loss = loss_func(pred, out)
@@ -224,7 +224,7 @@ def Train_and_Test_4signals(path_bp, path_ppg, path_ecg, path_ri, patient_num, t
             plt.savefig(only_PPG_path + '/iteration_' + str(t) +" from minute "+ str(train_start_time))
             calc_loss_precentage(out[:, 1].data.cpu(), pred[:, 1].data.cpu().numpy(), train_size_125Hz,
                                  str(t) + 'from minute' + str(train_start_time), patient_num)
-            pred_t = r(x_test_ri)
+            pred_t = r(x_test_PPG)
 
             plt.clf()
             plt.plot(pred_t[:1000, 1].data.cpu().numpy(), label='prediction_BP')
@@ -247,7 +247,7 @@ def Train_and_Test_4signals(path_bp, path_ppg, path_ecg, path_ri, patient_num, t
 
     # TEST- on the same patient as the train
 
-    pred_t = r(x_test_ri)
+    pred_t = r(x_test_PPG)
 
     # TEST- other patient
     # t_inp_ppg_patient_1 = torch.Tensor(data_ppg_test_1.reshape((data_ppg_test_1.shape[0], -1, 1))).cuda()
