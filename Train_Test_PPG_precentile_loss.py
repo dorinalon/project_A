@@ -10,13 +10,14 @@ from torch.autograd import Variable
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 device = torch.device("cuda")
 
-n_samples = 2
+n_samples = 1
 output_dim = 1
 input_dim = 1
 hidden_size = 30
 num_layers = 4
 
-only_PPG_path = '/home/shirili/Downloads/ShirirliDorin/project_A/data_125Hz/2728529-6534/new'
+only_PPG_path = '/home/shirili/Downloads/ShirirliDorin/project_A/data_125Hz/2728529-6534/try_ri_new'
+r_path = only_PPG_path + "/saved_nn"
 
 def read_csv(path):
     i = 0
@@ -28,7 +29,6 @@ def read_csv(path):
         csv_reader = csv.reader(csv_file, delimiter=',')
         data = np.zeros((row_count, n_samples))
         for row in csv_reader:
-            data[i, 1] = (float(row[0]))
             data[i, 0] = (float(row[0]))
             i=i+1
     return row_count, data
@@ -50,14 +50,15 @@ def calc_loss_precentage(expec_BP, pred_BP, time_length, iteration_num, patient_
     plt.plot(pred_95, label='pred_95')
     plt.plot(pred_5, label='pred_5')
     plt.legend()
+    plt.title("Prediction and Expected BP systolic and diastolic of "+str(patient_num))
     plt.savefig(only_PPG_path + '/Prediction and Expected BP systolic and diastolic ' + str(iteration_num))
 
 def Train_and_Test_4signals(path_bp, path_ppg, path_ecg, path_ri, patient_num, train_start_time):
 
     row_count_bp, data_bp = read_csv(path_bp)
     row_count_ppg, data_ppg = read_csv(path_ppg)
-    row_count_ecg, data_ecg = read_csv(path_ecg)
-    row_count_ri, data_ri = read_csv(path_ri)
+    #row_count_ecg, data_ecg = read_csv(path_ecg)
+    #row_count_ri, data_ri = read_csv(path_ri)
 
     #test on other patients
 
@@ -66,33 +67,14 @@ def Train_and_Test_4signals(path_bp, path_ppg, path_ecg, path_ri, patient_num, t
     # row_count_ecg_test1, data_ecg_test_1 = read_csv(test1_ecg_path)
     # row_count_ri_test1, data_ri_test_1 = read_csv(test1_ri_path)
 
-    # row_count = min(row_count_ppg,row_count_bp)
-    row_count = min(row_count_ppg, row_count_bp, row_count_ecg, row_count_ri)
+    row_count = min(row_count_ppg,row_count_bp)
+    #row_count = min(row_count_ppg, row_count_bp, row_count_ecg, row_count_ri)
 
     data_bp = data_bp[:row_count]
     data_ppg = data_ppg[:row_count]
-    data_ecg = data_ecg[:row_count]
-    data_ri = data_ri[:row_count]
+    #data_ecg = data_ecg[:row_count]
+    #data_ri = data_ri[:row_count]
 
-    # data normalization
-
-    # SKlearn min max scaler (normalization)
-
-    # scaler_BP = MinMaxScaler(feature_range=(-1,1))
-    # data_bp_scaled = scaler_BP.fit_transform(data_bp)
-    #
-    # scaler_ECG = MinMaxScaler(feature_range=(-1,1))
-    # data_ecg_scaled = scaler_ECG.fit_transform(data_ecg)
-    #
-    # scaler_RI = MinMaxScaler(feature_range=(-1,1))
-    # data_ri_scaled = scaler_RI.fit_transform(data_ri)
-    #
-    # scaler_PPG = MinMaxScaler(feature_range=(-1,1))
-    # data_ppg_scaled = scaler_PPG.fit_transform(data_ppg)
-
-    # # division to train and test
-    # train_size_125Hz = 16000 # round(row_count * (3 / 4))
-    # test_size_125Hz = 8000 # round(row_count / 4)
 
     train_start_samp = train_start_time*60*125
     train_size_125Hz = 5*60*125
@@ -100,49 +82,38 @@ def Train_and_Test_4signals(path_bp, path_ppg, path_ecg, path_ri, patient_num, t
 
     train_bp = data_bp[train_start_samp:train_start_samp+train_size_125Hz, :]
     train_ppg = data_ppg[train_start_samp:train_start_samp+train_size_125Hz, :]
-    train_ecg = data_ecg[train_start_samp:train_start_samp+train_size_125Hz, :]
-    train_ri = data_ri[train_start_samp:train_start_samp+train_size_125Hz, :]
-
-    # fig, (ax1, ax2, ax3, ax4) = plt.subplots(4)
-    # ax1.plot(train_bp)
-    # ax1.set_title('Blood Pressure')
-    # ax2.plot(train_ppg)
-    # ax2.set_title('PPG')
-    # ax3.plot(train_ecg)
-    # ax3.set_title('ECG')
-    # ax4.plot(train_ri)
-    # ax4.set_title('RI')
-    # plt.title('12-17 minutes')
-    # plt.show()
+    #train_ecg = data_ecg[train_start_samp:train_start_samp+train_size_125Hz, :]
+    #train_ri = data_ri[train_start_samp:train_start_samp+train_size_125Hz, :]
 
     test_bp = data_bp[train_start_samp+train_size_125Hz:train_start_samp+train_size_125Hz+test_size_125Hz, :]
     test_ppg = data_ppg[train_start_samp+train_size_125Hz:train_start_samp+train_size_125Hz+test_size_125Hz, :]
-    test_ecg = data_ecg[train_start_samp+train_size_125Hz:train_start_samp+train_size_125Hz + test_size_125Hz, :]
-    test_ri = data_ri[train_start_samp+train_size_125Hz:train_start_samp+train_size_125Hz + test_size_125Hz, :]
+    #test_ecg = data_ecg[train_start_samp+train_size_125Hz:train_start_samp+train_size_125Hz + test_size_125Hz, :]
+    #test_ri = data_ri[train_start_samp+train_size_125Hz:train_start_samp+train_size_125Hz + test_size_125Hz, :]
 
-    # data_bp_test_1 = data_bp_test_1[:test_size_125Hz,:]
-    # data_ppg_test_1=data_ppg_test_1[:test_size_125Hz,:]
-    # data_ecg_test_1 = data_ecg_test_1[:test_size_125Hz, :]
-    # data_ri_test_1 = data_ri_test_1[:test_size_125Hz, :]
+    test_bp = train_bp
+    test_ppg = train_ppg
+
 
     # SKlearn min max scaler (normalization)
 
     scaler_BP = MinMaxScaler(feature_range=(-1,1))
     train_bp_scaled = scaler_BP.fit_transform(train_bp)
 
-    scaler_ECG = MinMaxScaler(feature_range=(-1,1))
-    train_ecg_scaled = scaler_ECG.fit_transform(train_ecg)
-
-    scaler_RI = MinMaxScaler(feature_range=(-1,1))
-    train_ri_scaled = scaler_RI.fit_transform(train_ri)
+    # scaler_ECG = MinMaxScaler(feature_range=(-1,1))
+    # train_ecg_scaled = scaler_ECG.fit_transform(train_ecg)
+    #
+    # scaler_RI = MinMaxScaler(feature_range=(-1,1))
+    # train_ri_scaled = scaler_RI.fit_transform(train_ri)
 
     scaler_PPG = MinMaxScaler(feature_range=(-1,1))
     train_ppg_scaled = scaler_PPG.fit_transform(train_ppg)
 
     test_bp_scaled = scaler_BP.transform(test_bp)
-    test_ecg_scaled = scaler_ECG.fit_transform(test_ecg)
-    test_ri_scaled = scaler_RI.fit_transform(test_ri)
+    # test_ecg_scaled = scaler_ECG.fit_transform(test_ecg)
+    # test_ri_scaled = scaler_RI.fit_transform(test_ri)
     test_ppg_scaled = scaler_PPG.fit_transform(test_ppg)
+
+
 
 
     # Creating lstm class
@@ -186,18 +157,18 @@ def Train_and_Test_4signals(path_bp, path_ppg, path_ecg, path_ri, patient_num, t
     # TRAIN
     #inp_ri = torch.Tensor(train_ri_scaled.reshape((train_ri_scaled.shape[0], -1, 1))).cuda()
     inp_ppg = torch.Tensor(train_ppg_scaled.reshape((train_ppg_scaled.shape[0], -1, 1))).cuda()
-    inp_ecg = torch.Tensor(train_ecg_scaled.reshape((train_ecg_scaled.shape[0], -1, 1))).cuda()
+    #inp_ecg = torch.Tensor(train_ecg_scaled.reshape((train_ecg_scaled.shape[0], -1, 1))).cuda()
     out = torch.Tensor(train_bp_scaled.reshape((train_bp_scaled.shape[0], -1, 1))).cuda()
 
     # TEST
 
     x_test_PPG = torch.Tensor(test_ppg_scaled.reshape((test_ppg_scaled.shape[0], -1, 1))).cuda()
     #x_test_ri = torch.Tensor(test_ri_scaled.reshape((test_ri_scaled.shape[0], -1, 1))).cuda()
-    x_test_ecg = torch.Tensor(test_ecg_scaled.reshape((test_ecg_scaled.shape[0], -1, 1))).cuda()
+    #x_test_ecg = torch.Tensor(test_ecg_scaled.reshape((test_ecg_scaled.shape[0], -1, 1))).cuda()
 
     pred_t = r(x_test_PPG)
 
-    for t in range(1):
+    for t in range(321):
         hidden = None
         #x = torch.cat((inp_ppg, inp_ecg, inp_ri), dim=2)
         pred = r(inp_ppg)
@@ -222,21 +193,21 @@ def Train_and_Test_4signals(path_bp, path_ppg, path_ecg, path_ri, patient_num, t
             plt.title('iteration '+str(t))
             plt.legend()
             plt.savefig(only_PPG_path + '/iteration_' + str(t) +" from minute "+ str(train_start_time))
-            calc_loss_precentage(out[:, 1].data.cpu(), pred[:, 1].data.cpu().numpy(), train_size_125Hz,
+            calc_loss_precentage(out[:, 0].data.cpu(), pred[:, 0].data.cpu().numpy(), train_size_125Hz,
                                  str(t) + 'from minute' + str(train_start_time), patient_num)
             pred_t = r(x_test_PPG)
 
             plt.clf()
-            plt.plot(pred_t[:1000, 1].data.cpu().numpy(), label='prediction_BP')
-            plt.plot(test_bp_scaled[:1000, 1], label='expected_BP')
+            plt.plot(pred_t[:1000, 0].data.cpu().numpy(), label='prediction_BP')
+            plt.plot(test_bp_scaled[:1000, 0], label='expected_BP')
             plt.xlabel('samples')
             plt.ylabel('mmHg')
             plt.title(" BP Prediction based on PPG iteration " + str(t))
             plt.legend()
             plt.savefig(only_PPG_path + '/Prediction and Expected BP ' + str(t)+" from minute "+str(train_start_time))
 
-            # calc_loss_precentage(test_bp_scaled[:,1], pred_t[:,1].data.cpu().numpy(), test_size_125Hz, str(t)+'from minute'+str(train_start_time), patient_num)
-
+    # Save the net
+    torch.save(r.state_dict(),r_path )
     # Mean Loss
     plt.clf()
     plt.plot(loss_vec)
@@ -269,27 +240,12 @@ def Train_and_Test_4signals(path_bp, path_ppg, path_ecg, path_ri, patient_num, t
     # plt.legend()
     # plt.savefig(only_PPG_path + patient_num + '/test_on_patient1')
 
-    # plot the mean error for each iteration
-    # for j in range(test_size_125Hz):
-    #     a = pred_t[j,1].data.cpu().numpy()
-    #     pred_t[j,1] = (((a[0] + ((max_bp-min_bp)/2)+min_bp) * max_bp_div) * 0.0625) - 40
-    # test_bp[:,1] = (((test_bp[:,1] + ((max_bp-min_bp)/2)+min_bp ) * max_bp_div) * 0.0625) - 40
-    # print(str(type(pred_t)))
-    # print(str(type(pred_t.data.cpu())))
-    # print(str(np.shape(pred_t)))
-    # print(str(np.shape(pred_t[:,:,0].data.cpu())))
-    # print(str(pred_t[:,1].data.cpu()))
-    #scaler_BP.inverse_transform(pred_t[:, :].data.cpu().numpy())
-    # scaler_BP.inverse_transform(pred_t[:, :, 0].data.cpu()) #TODO: scale back
-    # scaler_BP.inverse_transform(test_bp_scaled[:,:])
 
     pred_t = scaler_BP.inverse_transform(pred_t[:, :,0].data.cpu().numpy())
     test_bp_scaled = scaler_BP.inverse_transform(test_bp_scaled)[:,:]
-    pred_t=(pred_t* 0.0625) - 40
+
     test_bp_scaled = (test_bp_scaled * 0.0625) - 40
-    #
-    test_bp = (test_bp*0.0625) - 40
-    # pred_t = (pred_t * 0.0625) - 40
+
 
 
     plt.clf()
@@ -300,9 +256,20 @@ def Train_and_Test_4signals(path_bp, path_ppg, path_ecg, path_ri, patient_num, t
     plt.ylabel('mmHg')
     plt.title(" BP Prediction based on PPG - original values")
     plt.legend()
-    plt.savefig(only_PPG_path + '/FINAL: Prediction and Expected BP from minute '+str(train_start_time))
+    plt.savefig(only_PPG_path + '/FINAL ZOOM: Prediction and Expected BP from minute '+str(train_start_time))
 
-    calc_loss_precentage(test_bp_scaled[:, 0], pred_t[:, 0], test_size_125Hz, 'orig value from minute '+str(train_start_time), patient_num)
+    plt.clf()
+    plt.plot(pred_t[:,0], label='prediction_BP')
+    plt.plot(test_bp[:,0], label='expected_BP')
+    plt.xlabel('samples')
+    plt.ylabel('mmHg')
+    plt.ylabel('mmHg')
+    plt.title(" BP Prediction based on PPG - original values")
+    plt.legend()
+    plt.savefig(only_PPG_path + '/FINAL: Prediction and Expected BP from minute ' + str(train_start_time))
+    plt.clf()
+
+    calc_loss_precentage(test_bp[:, 0], pred_t[:, 0], test_size_125Hz, 'orig value from minute '+str(train_start_time), patient_num)
     path = only_PPG_path + '/from minute_'+ str(train_start_time)+'_expec0_pred1.csv'
     i=0
     with open(path,'w') as csv_file:
@@ -321,20 +288,9 @@ def Train_and_Test_4signals(path_bp, path_ppg, path_ecg, path_ri, patient_num, t
     #         csv_reader.writerow([data_bp_test_1[i, 1], (pred_t_patient_1[i, 1].data.cpu().numpy())[0]])
 
 
-    # plot the error of a single example
-    # samp_loss_vec = []
-    # for i in range(test_size_125Hz):
-    #     a = pred_t[i,1].data.cpu().numpy()
-    #     b = test_bp[i,1]
-    #     samp_loss_vec.append(abs(np.subtract(a[0],b)))
-    # plt.clf()
-    # plt.plot(samp_loss_vec.numpy())
-    # plt.title("Error = pred_t - test_BP")
-    # plt.ylim(0, 10)
-    # plt.xlabel('t [sec]')
-    # plt.savefig(only_PPG_path + patient_num + '/Error')
 
-#
+
+
 # Train_and_Test_4signals('/home/shirili/Downloads/ShirirliDorin/project_A/data_4_sig/2210563-9215/2210563-9215_BP_125Hz.csv',
 #                         '/home/shirili/Downloads/ShirirliDorin/project_A/data_4_sig/2210563-9215/2210563-9215_PPG_125Hz.csv',
 #                         '2210563-9215',0)
@@ -375,10 +331,23 @@ def Train_and_Test_4signals(path_bp, path_ppg, path_ecg, path_ri, patient_num, t
 #                         '/home/shirili/Downloads/ShirirliDorin/project_A/data_4_sig/2544444-5692/2544444-5692_PPG_125Hz.csv',
 #                        '2544444-5692',0
 #                         )
+#
+# Train_and_Test_4signals('/home/shirili/Downloads/ShirirliDorin/project_A/data_125Hz/2728529-6534/2728529-6534BP_125Hz_1_col.csv',
+#                         '/home/shirili/Downloads/ShirirliDorin/project_A/data_125Hz/2728529-6534/2728529-6534PPG_125Hz_1_col.csv',
+#                         '/home/shirili/Downloads/ShirirliDorin/project_A/data_125Hz/2728529-6534/2728529-6534ECG_125Hz_1_col.csv',
+#                         '/home/shirili/Downloads/ShirirliDorin/project_A/data_125Hz/2728529-6534/2728529-6534RI_125Hz_1_col.csv',
+#                        '2728529-6534',12)
+
 
 Train_and_Test_4signals('/home/shirili/Downloads/ShirirliDorin/project_A/data_125Hz/2728529-6534/2728529-6534BP_125Hz_1_col.csv',
                         '/home/shirili/Downloads/ShirirliDorin/project_A/data_125Hz/2728529-6534/2728529-6534PPG_125Hz_1_col.csv',
-                        '/home/shirili/Downloads/ShirirliDorin/project_A/data_125Hz/2728529-6534/2728529-6534ECG_125Hz_1_col.csv',
-                        '/home/shirili/Downloads/ShirirliDorin/project_A/data_125Hz/2728529-6534/2728529-6534RI_125Hz_1_col.csv',
+                        '/home/shirili/Downloads/ShirirliDorin/project_A/data_125Hz/2728529-6534/2728529-6534PPG_125Hz_1_col.csv',
+                        '/home/shirili/Downloads/ShirirliDorin/project_A/data_125Hz/2728529-6534/2728529-6534PPG_125Hz_1_col.csv',
                        '2728529-6534',12)
+
+# Train_and_Test_4signals('/home/shirili/Downloads/ShirirliDorin/project_A/data_125Hz/2642420-8079/2642420-8079-MDC_PRESS_BLD_ART_ABP-125.csv',
+#                         '/home/shirili/Downloads/ShirirliDorin/project_A/data_125Hz/2642420-8079/2642420-8079-MDC_PULS_OXIM_PLETH-125.csv',
+#                         '/home/shirili/Downloads/ShirirliDorin/project_A/data_125Hz/2728529-6534/2728529-6534ECG_125Hz_1_col.csv',
+#                         '/home/shirili/Downloads/ShirirliDorin/project_A/data_125Hz/2728529-6534/2728529-6534RI_125Hz_1_col.csv',
+#                        '2642420-8079',5)
 
